@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_firebase_blog_app/data/model/post.dart';
 import 'package:flutter_firebase_blog_app/ui/detail/detail_page.dart';
+import 'package:flutter_firebase_blog_app/ui/home/home_view_model.dart';
 import 'package:flutter_firebase_blog_app/ui/write/write_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -13,7 +16,7 @@ class HomePage extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) {
-                return WritePage();
+                return WritePage(null);
               },
             ),
           );
@@ -28,14 +31,20 @@ class HomePage extends StatelessWidget {
           children: [
             Text('최근글', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
-            Expanded(
-              child: ListView.separated(
-                itemCount: 10,
-                separatorBuilder: (context, index) => SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  return item();
-                },
-              ),
+            Consumer(
+              builder: (context, ref, child) {
+                final posts = ref.watch(homeViewModelProvider);
+                return Expanded(
+                  child: ListView.separated(
+                    itemCount: posts.length,
+                    separatorBuilder: (context, index) => SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final post = posts[index];
+                      return item(post);
+                    },
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -43,7 +52,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget item() {
+  Widget item(Post post) {
     return Builder(
       builder: (context) {
         return GestureDetector(
@@ -52,7 +61,7 @@ class HomePage extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) {
-                  return DetailPage();
+                  return DetailPage(post);
                 },
               ),
             );
@@ -69,7 +78,7 @@ class HomePage extends StatelessWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadiusDirectional.circular(20),
                     child: Image.network(
-                      'https://picsum.photos/200/300',
+                      post.imageUrl,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -87,7 +96,7 @@ class HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Today I Learned',
+                        post.title,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -95,7 +104,7 @@ class HomePage extends StatelessWidget {
                       ),
                       Spacer(),
                       Text(
-                        'Flutter 그리드뷰를 배웠습니다.Flutter 그리드뷰를 배웠습니다.Flutter 그리드뷰를 배웠습니다.',
+                        post.content,
                         style: TextStyle(
                           overflow: TextOverflow.ellipsis,
                           color: Colors.grey,
@@ -104,7 +113,7 @@ class HomePage extends StatelessWidget {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        '2025.04.16 15:57',
+                        post.createdAt.toIso8601String(),
                         style: TextStyle(color: Colors.grey, fontSize: 12),
                       ),
                     ],
